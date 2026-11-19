@@ -428,7 +428,22 @@ REVISORES = {
 }
 
 
+def en_horario():
+    # Carlos: revisiones solo de 7:00 a 23:00, hora de Madrid. El cron de
+    # GitHub va en UTC; con zoneinfo la ventana se ajusta sola al cambio de
+    # hora de verano/invierno. Sin zoneinfo se revisa siempre.
+    try:
+        from zoneinfo import ZoneInfo
+        hora = datetime.now(ZoneInfo("Europe/Madrid")).hour
+    except Exception:
+        return True
+    return 7 <= hora <= 23
+
+
 def main():
+    if not en_horario():
+        print("Fuera de horario (7:00-23:00 Madrid); revision omitida")
+        return 0
     with open(RUTA_FUENTES, encoding="utf-8") as f:
         fuentes = json.load(f)["fuentes"]
     db = abrir_db()
@@ -451,7 +466,7 @@ def main():
 
     if not meta_get(db, "activado"):
         nombres = "\n".join(f"· {f['nombre']}" for f in fuentes)
-        telegram("✅ Radar RSS activado. Vigilo estas fuentes cada hora "
+        telegram("✅ Radar RSS activado. Vigilo estas fuentes cada hora, de 7:00 a 23:00 hora de Madrid, "
                  f"y te aviso solo de lo nuevo:\n{nombres}\n\n"
                  "Comandos: /fuentes y /estado")
         meta_set(db, "activado", ahora_iso())
