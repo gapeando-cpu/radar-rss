@@ -451,7 +451,7 @@ def main():
 
     if not meta_get(db, "activado"):
         nombres = "\n".join(f"· {f['nombre']}" for f in fuentes)
-        telegram("✅ Radar RSS activado. Vigilo estas fuentes cada 15 minutos "
+        telegram("✅ Radar RSS activado. Vigilo estas fuentes cada hora "
                  f"y te aviso solo de lo nuevo:\n{nombres}\n\n"
                  "Comandos: /fuentes y /estado")
         meta_set(db, "activado", ahora_iso())
