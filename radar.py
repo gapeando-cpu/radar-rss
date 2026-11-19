@@ -144,6 +144,27 @@ def registrar_revision(db, fuente_id, resultado, nuevos):
         " VALUES (?,?,?,?)", (fuente_id, ahora_iso(), resultado, nuevos))
 
 
+def escribir_estado(db, fuentes):
+    # JSON publico con el resultado de la ultima revision; el comando /estado
+    # del bot lo lee por raw.githubusercontent.com sin tocar la API de GitHub.
+    filas = {f[0]: f[1:] for f in db.execute(
+        "SELECT fuente, revisado_en, resultado, nuevos FROM revisiones")}
+    estado = {
+        "ultima_revision_utc": ahora_iso(),
+        "fuentes": [
+            {
+                "id": fuente["id"],
+                "nombre": fuente.get("nombre", fuente["id"]),
+                "resultado": filas.get(fuente["id"], (None, "pendiente", 0))[1],
+                "nuevos": filas.get(fuente["id"], (None, "pendiente", 0))[2],
+            }
+            for fuente in fuentes
+        ],
+    }
+    with open(RUTA_DB.parent / "estado.json", "w", encoding="utf-8") as f:
+        json.dump(estado, f, ensure_ascii=False, indent=1)
+
+
 def filtrar_nuevos(db, fuente, pubs):
     """Deja solo publicaciones no vistas; actualiza vistos y marca de agua.
 
@@ -403,6 +424,7 @@ def main():
             registrar_revision(db, fuente["id"], f"error: {exc}", 0)
             print(f"ERROR en {fuente['id']}: {exc}")
     db.commit()
+    escribir_estado(db, fuentes)
 
     if not meta_get(db, "activado"):
         nombres = "\n".join(f"· {f['nombre']}" for f in fuentes)
