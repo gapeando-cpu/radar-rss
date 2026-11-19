@@ -5,7 +5,7 @@ publicaciones nuevas a Telegram, sin usar IA.
 
 ## Cómo funciona
 
-- Cada hora, un workflow de GitHub Actions revisa las fuentes de
+- Cada hora, de 7:00 a 23:00 (hora de Madrid), un workflow de GitHub Actions revisa las fuentes de
   `fuentes.json` y avisa por Telegram solo de lo nuevo (sin duplicados).
 - Un segundo horario de refuerzo (10 minutos después) cubre revisiones que
   GitHub se salte o retrase; si la anterior ya corrió, se salta sola.
