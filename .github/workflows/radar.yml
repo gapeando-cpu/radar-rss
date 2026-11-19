@@ -2,11 +2,12 @@ name: Radar RSS
 
 on:
   schedule:
-    # Revision principal cada hora en punto (UTC).
-    - cron: "0 * * * *"
+    # Revision principal cada hora en punto. La ventana UTC cubre 7:00-23:00
+    # hora de Madrid todo el ano (CET y CEST); radar.py recorta la hora exacta.
+    - cron: "0 5-22 * * *"
     # Refuerzo 10 minutos despues: si GitHub se salta o retrasa la revision
     # principal, esta la cubre. Si la anterior ya corrio, se salta sola.
-    - cron: "10 * * * *"
+    - cron: "10 5-22 * * *"
   workflow_dispatch:
 
 permissions:
