@@ -282,29 +282,46 @@ def revisar_rankia(fuente, db):
     posts.sort(key=lambda p: int(p["id"]))
     nuevos, es_primera = filtrar_nuevos(db, fuente, posts)
     if es_primera:
-        nuevos, semilla = nuevos[:-SEMILLA_AVISOS], nuevos[-SEMILLA_AVISOS:]
-        for pub in semilla:
-            enviar_aviso_rankia(fuente, url, pub, es_estreno=True)
+        semilla = nuevos[-SEMILLA_AVISOS:]
+        enviar_avisos_rankia(fuente, semilla, es_estreno=True)
         return len(semilla)
-    enviados = 0
-    for pub in nuevos[:MAX_AVISOS_POR_FUENTE]:
-        if enviar_aviso_rankia(fuente, url, pub):
-            enviados += 1
-    if len(nuevos) > MAX_AVISOS_POR_FUENTE:
-        telegram(f"📡 {fuente['nombre']}\nY {len(nuevos) - MAX_AVISOS_POR_FUENTE} "
-                 f"mensajes mas:\n{url}?page={pagina}")
-    return enviados
+    capados = nuevos[:MAX_AVISOS_POR_FUENTE]
+    if capados:
+        enviar_avisos_rankia(fuente, capados,
+                             extras=len(nuevos) - len(capados))
+    return len(capados)
 
 
-def enviar_aviso_rankia(fuente, url_base, pub, es_estreno=False):
-    enlace = f"{url_base}?page={pub['pagina']}#respuesta_{pub['id']}"
+def enviar_avisos_rankia(fuente, pubs, es_estreno=False, extras=0):
+    """Un solo aviso por hilo y revision: los mensajes nuevos van juntos,
+    separados, y sin enlace (preferencia de Carlos)."""
     cabecera = f"📡 {fuente['nombre']}"
     if es_estreno:
         cabecera += " (primer aviso del radar)"
-    cuerpo = pub["texto"] or "(mensaje sin texto, quizas solo imagen)"
-    texto = (f"{cabecera}\n{pub['autor']} · {fecha_bonita(pub['fecha_iso'])}\n"
-             f"{recortar(cuerpo)}\n{enlace}")
-    return telegram(texto)
+    bloques = []
+    for pub in pubs:
+        cuerpo = pub["texto"] or "(mensaje sin texto, quizas solo imagen)"
+        bloques.append(f"{pub['autor']} · {fecha_bonita(pub['fecha_iso'])}\n"
+                       f"{recortar(cuerpo)}")
+    if extras:
+        bloques.append(f"… y {extras} mensajes mas en el hilo.")
+    return enviar_agrupado(cabecera, bloques)
+
+
+def enviar_agrupado(cabecera, bloques):
+    """Junta los bloques en el menor numero de mensajes de Telegram posible
+    (tope 4000 caracteres; el limite real de Telegram es 4096)."""
+    separador = "\n\n──────────\n\n"
+    actual = cabecera
+    for bloque in bloques:
+        candidato = actual + (separador if actual != cabecera else "\n\n") + bloque
+        if actual != cabecera and len(candidato) > 4000:
+            if not telegram(actual):
+                return False
+            actual = cabecera + " (cont.)" + "\n\n" + bloque
+        else:
+            actual = candidato
+    return telegram(actual)
 
 
 # --------------------------------------------------------------- rss / atom
@@ -358,14 +375,18 @@ def revisar_rss(fuente, db):
     nuevos, es_primera = filtrar_nuevos(db, fuente, pubs)
     if es_primera:
         nuevos = nuevos[-SEMILLA_AVISOS:]
-    for pub in nuevos[:MAX_AVISOS_POR_FUENTE]:
+    capados = nuevos[:MAX_AVISOS_POR_FUENTE]
+    if capados:
         cabecera = f"📡 {fuente['nombre']}"
         if es_primera:
             cabecera += " (primer aviso del radar)"
-        texto = (f"{cabecera}\n{pub['titulo']}\n"
-                 f"{recortar(pub['texto'])}\n{pub['enlace']}").strip()
-        telegram(texto)
-    return min(len(nuevos), MAX_AVISOS_POR_FUENTE)
+        bloques = [f"{pub['titulo']}\n{recortar(pub['texto'])}".strip()
+                   for pub in capados]
+        extras = len(nuevos) - len(capados)
+        if extras:
+            bloques.append(f"… y {extras} entradas mas en el canal.")
+        enviar_agrupado(cabecera, bloques)
+    return len(capados)
 
 
 # --------------------------------------------------------- pagina generica
@@ -391,9 +412,11 @@ def revisar_pagina(fuente, db):
     nuevos, es_primera = filtrar_nuevos(db, fuente, pubs)
     if es_primera:
         return 0  # pagina generica: solo siembra, sin avisos de estreno
-    for pub in nuevos[:MAX_AVISOS_POR_FUENTE]:
-        telegram(f"📡 {fuente['nombre']}\n{pub['titulo']}\n{pub['enlace']}")
-    return min(len(nuevos), MAX_AVISOS_POR_FUENTE)
+    capados = nuevos[:MAX_AVISOS_POR_FUENTE]
+    if capados:
+        enviar_agrupado(f"📡 {fuente['nombre']}",
+                        [pub["titulo"] for pub in capados])
+    return len(capados)
 
 
 # --------------------------------------------------------------------- main
