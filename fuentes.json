@@ -1,0 +1,34 @@
+{
+  "fuentes": [
+    {
+      "id": "rankia-cashback",
+      "nombre": "Rankia: Tarjetas promociones y cashback",
+      "tipo": "rankia_hilo",
+      "url": "https://www.rankia.com/foros/bancos-cajas/temas/6710178-tarjetas-promociones-cashback"
+    },
+    {
+      "id": "rankia-igraal",
+      "nombre": "Rankia: Ahorrar con cashback (iGraal y cuentas)",
+      "tipo": "rankia_hilo",
+      "url": "https://www.rankia.com/foros/bancos-cajas/temas/7081608-ahorrar-cashback-igraal-cuentas-bancarias-otros"
+    },
+    {
+      "id": "rankia-bbva",
+      "nombre": "Rankia: Cuenta Online BBVA promoción 1.200€",
+      "tipo": "rankia_hilo",
+      "url": "https://www.rankia.com/foros/bancos-cajas/temas/7269436-cuenta-online-bbva-promocion-combinada-1-200-brutos"
+    },
+    {
+      "id": "rankia-ing",
+      "nombre": "Rankia: Cuenta Nómina ING 150€",
+      "tipo": "rankia_hilo",
+      "url": "https://www.rankia.com/foros/bancos-cajas/temas/6989465-cuenta-nomina-ing-150"
+    },
+    {
+      "id": "rankia-bodega",
+      "nombre": "Rankia: Cómo aumentar tus ingresos (experiencia compartida)",
+      "tipo": "rankia_hilo",
+      "url": "https://www.rankia.com/foros/bancos-cajas/temas/6015779-como-aumentar-tus-ingresos-bodega-tintos-experiencia-compartida-cuentas-bancarias"
+    }
+  ]
+}
