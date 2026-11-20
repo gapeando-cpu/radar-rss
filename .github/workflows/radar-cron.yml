@@ -33,13 +33,6 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Restaurar base de datos (temporal)
-        run: |
-          if [ ! -f data/radar.db ] && [ -f data/radar.db.b64 ]; then
-            base64 -d data/radar.db.b64 > data/radar.db
-            echo "Base de datos restaurada desde b64"
-          fi
-
       - name: Saltar refuerzos redundantes
         id: guardia
         env:
