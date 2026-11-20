@@ -231,12 +231,20 @@ def parse_rankia(html, url_base):
     return posts, pagina
 
 
-def fecha_bonita(fecha_iso):
-    try:
-        d = datetime.strptime(fecha_iso, "%Y-%m-%dT%H:%M:%S")
-        return d.strftime("%d/%m/%y %H:%M")
-    except ValueError:
-        return fecha_iso
+RE_EMAIL = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}")
+RE_EMAIL_CON_COLETA = re.compile(
+    r"(?i)(?:mi\s+)?(?:e-?mail|correo(?:\s+electr[oó]nico)?)\s*(?:es\s*)?:\s*"
+    + RE_EMAIL.pattern)
+
+
+def quitar_emails(texto):
+    """Sin direcciones de correo en los avisos (peticion de Carlos 2026-11-20):
+    fuera la direccion y, si la precede, la coletilla tipo 'Mi correo:'."""
+    texto = RE_EMAIL_CON_COLETA.sub("", texto)
+    texto = RE_EMAIL.sub("", texto)
+    texto = re.sub(r"\s{2,}", " ", texto)
+    texto = re.sub(r"\s+([,.;:])", r"\1", texto)
+    return texto.lstrip(" ,;:.").rstrip(" ,;:")
 
 
 def revisar_rankia(fuente, db):
@@ -287,15 +295,16 @@ def revisar_rankia(fuente, db):
 def enviar_avisos_rankia(fuente, pubs, es_estreno=False):
     """Un solo aviso por hilo y revision: los mensajes nuevos van juntos,
     separados, y sin enlace (preferencia de Carlos). El texto de cada
-    mensaje va completo: Carlos prefiere verlo todo (2026-11-20)."""
+    mensaje va completo, pero sin la cabecera 'autor · fecha' ni emails
+    (preferencia de Carlos del 2026-11-20)."""
     cabecera = f"📡 {fuente['nombre']}"
     if es_estreno:
         cabecera += " (primer aviso del radar)"
     bloques = []
     for pub in pubs:
         cuerpo = pub["texto"] or "(mensaje sin texto, quizas solo imagen)"
-        bloques.append(f"{pub['autor']} · {fecha_bonita(pub['fecha_iso'])}\n"
-                       f"{cuerpo}")
+        cuerpo = quitar_emails(cuerpo) or "(mensaje solo con datos de contacto)"
+        bloques.append(cuerpo)
     return enviar_agrupado(cabecera, bloques)
 
 
@@ -383,7 +392,7 @@ def revisar_rss(fuente, db):
         cabecera = f"📡 {fuente['nombre']}"
         if es_primera:
             cabecera += " (primer aviso del radar)"
-        bloques = [f"{pub['titulo']}\n{pub['texto']}".strip()
+        bloques = [f"{pub['titulo']}\n{quitar_emails(pub['texto'])}".strip()
                    for pub in nuevos]
         enviar_agrupado(cabecera, bloques)
     return len(nuevos)
@@ -479,3 +488,4 @@ def main():
 
 if __name__ == "__main__":
     sys.exit(main())
+
