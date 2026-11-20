@@ -32,7 +32,6 @@ CABECERAS = {
 
 INTENTOS_HTTP = 3               # recuperacion automatica ante fallos de descarga
 ESPERA_REINTENTO_S = 5
-MAX_AVISOS_POR_FUENTE = 10      # tope de mensajes por fuente y revision
 MAX_PAGINAS_ATRAS = 5           # paginas hacia atras si hay muchos mensajes nuevos
 SEMILLA_AVISOS = 1              # avisos reales al estrenar una fuente
 MAX_VISTOS = 3000               # poda del historial por fuente
@@ -62,12 +61,6 @@ def limpiar_html(fragmento):
     fragmento = re.sub(r"(?i)</(p|div|li|blockquote)>", " ", fragmento)
     fragmento = re.sub(r"<[^>]+>", " ", fragmento)
     return re.sub(r"\s+", " ", unescape(fragmento)).strip()
-
-
-def recortar(texto, limite=350):
-    if len(texto) <= limite:
-        return texto
-    return texto[:limite].rsplit(" ", 1)[0].rstrip(" ,.;:") + "…"
 
 
 def ahora_iso():
@@ -285,16 +278,15 @@ def revisar_rankia(fuente, db):
         semilla = nuevos[-SEMILLA_AVISOS:]
         enviar_avisos_rankia(fuente, semilla, es_estreno=True)
         return len(semilla)
-    capados = nuevos[:MAX_AVISOS_POR_FUENTE]
-    if capados:
-        enviar_avisos_rankia(fuente, capados,
-                             extras=len(nuevos) - len(capados))
-    return len(capados)
+    if nuevos:
+        enviar_avisos_rankia(fuente, nuevos)
+    return len(nuevos)
 
 
-def enviar_avisos_rankia(fuente, pubs, es_estreno=False, extras=0):
+def enviar_avisos_rankia(fuente, pubs, es_estreno=False):
     """Un solo aviso por hilo y revision: los mensajes nuevos van juntos,
-    separados, y sin enlace (preferencia de Carlos)."""
+    separados, y sin enlace (preferencia de Carlos). El texto de cada
+    mensaje va completo: Carlos prefiere verlo todo (2026-11-20)."""
     cabecera = f"📡 {fuente['nombre']}"
     if es_estreno:
         cabecera += " (primer aviso del radar)"
@@ -302,18 +294,29 @@ def enviar_avisos_rankia(fuente, pubs, es_estreno=False, extras=0):
     for pub in pubs:
         cuerpo = pub["texto"] or "(mensaje sin texto, quizas solo imagen)"
         bloques.append(f"{pub['autor']} · {fecha_bonita(pub['fecha_iso'])}\n"
-                       f"{recortar(cuerpo)}")
-    if extras:
-        bloques.append(f"… y {extras} mensajes mas en el hilo.")
+                       f"{cuerpo}")
     return enviar_agrupado(cabecera, bloques)
 
 
 def enviar_agrupado(cabecera, bloques):
     """Junta los bloques en el menor numero de mensajes de Telegram posible
-    (tope 4000 caracteres; el limite real de Telegram es 4096)."""
+    (tope 4000 caracteres; el limite real de Telegram es 4096). Un bloque
+    que no cabe ni solo en un mensaje se parte en trozos, sin perder texto."""
     separador = "\n\n──────────\n\n"
-    actual = cabecera
+    limite = 4000 - len(cabecera) - 40  # margen: cabecera + " (cont.)" + saltos
+    piezas = []
     for bloque in bloques:
+        while len(bloque) > limite:
+            corte = bloque.rfind("\n", limite // 2, limite)
+            if corte == -1:
+                corte = bloque.rfind(" ", limite // 2, limite)
+            if corte == -1:
+                corte = limite
+            piezas.append(bloque[:corte].rstrip() + " …")
+            bloque = "… " + bloque[corte:].lstrip()
+        piezas.append(bloque)
+    actual = cabecera
+    for bloque in piezas:
         candidato = actual + (separador if actual != cabecera else "\n\n") + bloque
         if actual != cabecera and len(candidato) > 4000:
             if not telegram(actual):
@@ -375,18 +378,14 @@ def revisar_rss(fuente, db):
     nuevos, es_primera = filtrar_nuevos(db, fuente, pubs)
     if es_primera:
         nuevos = nuevos[-SEMILLA_AVISOS:]
-    capados = nuevos[:MAX_AVISOS_POR_FUENTE]
-    if capados:
+    if nuevos:
         cabecera = f"📡 {fuente['nombre']}"
         if es_primera:
             cabecera += " (primer aviso del radar)"
-        bloques = [f"{pub['titulo']}\n{recortar(pub['texto'])}".strip()
-                   for pub in capados]
-        extras = len(nuevos) - len(capados)
-        if extras:
-            bloques.append(f"… y {extras} entradas mas en el canal.")
+        bloques = [f"{pub['titulo']}\n{pub['texto']}".strip()
+                   for pub in nuevos]
         enviar_agrupado(cabecera, bloques)
-    return len(capados)
+    return len(nuevos)
 
 
 # --------------------------------------------------------- pagina generica
@@ -412,11 +411,10 @@ def revisar_pagina(fuente, db):
     nuevos, es_primera = filtrar_nuevos(db, fuente, pubs)
     if es_primera:
         return 0  # pagina generica: solo siembra, sin avisos de estreno
-    capados = nuevos[:MAX_AVISOS_POR_FUENTE]
-    if capados:
+    if nuevos:
         enviar_agrupado(f"📡 {fuente['nombre']}",
-                        [pub["titulo"] for pub in capados])
-    return len(capados)
+                        [pub["titulo"] for pub in nuevos])
+    return len(nuevos)
 
 
 # --------------------------------------------------------------------- main
