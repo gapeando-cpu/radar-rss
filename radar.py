@@ -254,11 +254,12 @@ def revisar_rankia(fuente, db):
         vistos = {f[0] for f in db.execute(
             "SELECT pub_id FROM vistos WHERE fuente=?", (fuente["id"],))}
         atras = 0
-        # Si el mensaje mas viejo de la pagina tambien es nuevo, puede haber
-        # mas novedades en paginas anteriores.
-        while (len(posts) >= 15 and pagina > 1 and atras < MAX_PAGINAS_ATRAS
-               and min(int(p["id"]) for p in posts) > marca
-               and not any(p["id"] in vistos for p in posts)):
+        # Si el mensaje mas viejo de la pagina sigue por encima de la marca
+        # de agua, hay novedades en paginas anteriores: retroceder. Sin el
+        # requisito de pagina llena, que perdia mensajes justo cuando el
+        # hilo saltaba de pagina (la pagina nueva empieza con pocos posts).
+        while (pagina > 1 and atras < MAX_PAGINAS_ATRAS
+               and min(int(p["id"]) for p in posts) > marca):
             pagina -= 1
             atras += 1
             html = http_get(f"{url}?page={pagina}")
