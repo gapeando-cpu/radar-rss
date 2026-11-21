@@ -1,11 +1,11 @@
 {
- "ultima_revision_utc": "2026-11-21T21:18:04",
+ "ultima_revision_utc": "2026-11-21T22:17:55",
  "fuentes": [
   {
    "id": "rankia-cashback",
    "nombre": "Rankia: Tarjetas promociones y cashback",
    "resultado": "ok",
-   "nuevos": 5
+   "nuevos": 3
   },
   {
    "id": "rankia-igraal",
