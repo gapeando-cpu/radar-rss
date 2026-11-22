@@ -1,11 +1,11 @@
 {
- "ultima_revision_utc": "2026-11-22T20:43:27",
+ "ultima_revision_utc": "2026-11-22T21:17:57",
  "fuentes": [
   {
    "id": "rankia-cashback",
    "nombre": "Rankia: Tarjetas promociones y cashback",
    "resultado": "ok",
-   "nuevos": 1
+   "nuevos": 2
   },
   {
    "id": "rankia-igraal",
@@ -17,7 +17,7 @@
    "id": "rankia-bbva",
    "nombre": "Rankia: Cuenta Online BBVA promoción 1.200€",
    "resultado": "ok",
-   "nuevos": 0
+   "nuevos": 2
   },
   {
    "id": "rankia-ing",
