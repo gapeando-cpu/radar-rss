@@ -1,17 +1,17 @@
 {
- "ultima_revision_utc": "2026-11-22T17:17:55",
+ "ultima_revision_utc": "2026-11-22T18:17:58",
  "fuentes": [
   {
    "id": "rankia-cashback",
    "nombre": "Rankia: Tarjetas promociones y cashback",
    "resultado": "ok",
-   "nuevos": 11
+   "nuevos": 8
   },
   {
    "id": "rankia-igraal",
    "nombre": "Rankia: Ahorrar con cashback (iGraal y cuentas)",
    "resultado": "ok",
-   "nuevos": 0
+   "nuevos": 1
   },
   {
    "id": "rankia-bbva",
