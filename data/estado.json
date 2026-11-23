@@ -1,5 +1,5 @@
 {
- "ultima_revision_utc": "2026-11-23T10:18:05",
+ "ultima_revision_utc": "2026-11-23T11:17:59",
  "fuentes": [
   {
    "id": "rankia-cashback",
@@ -11,7 +11,7 @@
    "id": "rankia-igraal",
    "nombre": "Rankia: Ahorrar con cashback (iGraal y cuentas)",
    "resultado": "ok",
-   "nuevos": 4
+   "nuevos": 1
   },
   {
    "id": "rankia-bbva",
@@ -29,7 +29,7 @@
    "id": "rankia-bodega",
    "nombre": "Rankia: Cómo aumentar tus ingresos (experiencia compartida)",
    "resultado": "ok",
-   "nuevos": 7
+   "nuevos": 6
   }
  ]
 }
