@@ -195,7 +195,7 @@ def filtrar_nuevos(db, fuente, pubs):
 # --------------------------------------------------------------- rankia
 
 RE_ARTICULO = re.compile(
-    r'<article class="rnk-PostReply" id="respuesta_(\d+)" user="([^"]*)"')
+    '<article\\b(?=[^>]*\\bclass="[^"]*\\brnk-PostReply\\b)(?=[^>]*\\bid="respuesta_(\\d+)")(?=[^>]*\\buser="([^"]*)")[^>]*>')
 RE_TIEMPO = re.compile(
     r'<time class="rnk-PostReplyMetadata_Date" datetime="([^"]*)"')
 RE_PAGINA_ACTUAL = re.compile(
@@ -488,4 +488,3 @@ def main():
 
 if __name__ == "__main__":
     sys.exit(main())
-
