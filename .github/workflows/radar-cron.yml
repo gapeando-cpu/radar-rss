@@ -82,7 +82,7 @@ jobs:
         run: python radar.py
 
       - name: Guardar base de datos
-        if: steps.guardia.outputs.ejecutar == 'true'
+        if: always() && steps.guardia.outputs.ejecutar == 'true'
         run: |
           git config user.name "Radar RSS"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
