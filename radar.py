@@ -118,7 +118,27 @@ def abrir_db():
         "CREATE TABLE IF NOT EXISTS revisiones ("
         " fuente TEXT PRIMARY KEY, revisado_en TEXT NOT NULL,"
         " resultado TEXT NOT NULL, nuevos INTEGER NOT NULL)")
+    db.execute(
+        "CREATE TABLE IF NOT EXISTS pendientes ("
+        " id INTEGER PRIMARY KEY AUTOINCREMENT, fuente TEXT NOT NULL,"
+        " texto TEXT NOT NULL, creado_en TEXT NOT NULL)")
     return db
+
+
+class ErrorEntrega(RuntimeError):
+    pass
+
+
+def enviar_pendientes(db, fuente_id):
+    """Retira cada bloque solo cuando Telegram confirma su recepcion."""
+    filas = db.execute(
+        "SELECT id, texto FROM pendientes WHERE fuente=? ORDER BY id",
+        (fuente_id,)).fetchall()
+    for pendiente_id, texto in filas:
+        if not telegram(texto):
+            raise ErrorEntrega("Telegram no confirmo el envio; bloque pendiente de reintento")
+        db.execute("DELETE FROM pendientes WHERE id=?", (pendiente_id,))
+        db.commit()
 
 
 def meta_get(db, clave):
@@ -150,6 +170,9 @@ def escribir_estado(db, fuentes):
                 "nombre": fuente.get("nombre", fuente["id"]),
                 "resultado": filas.get(fuente["id"], (None, "pendiente", 0))[1],
                 "nuevos": filas.get(fuente["id"], (None, "pendiente", 0))[2],
+                "bloques_pendientes": db.execute(
+                    "SELECT count(*) FROM pendientes WHERE fuente=?",
+                    (fuente["id"],)).fetchone()[0],
             }
             for fuente in fuentes
         ],
@@ -285,14 +308,14 @@ def revisar_rankia(fuente, db):
     nuevos, es_primera = filtrar_nuevos(db, fuente, posts)
     if es_primera:
         semilla = nuevos[-SEMILLA_AVISOS:]
-        enviar_avisos_rankia(fuente, semilla, es_estreno=True)
+        enviar_avisos_rankia(fuente, semilla, es_estreno=True, db=db)
         return len(semilla)
     if nuevos:
-        enviar_avisos_rankia(fuente, nuevos)
+        enviar_avisos_rankia(fuente, nuevos, db=db)
     return len(nuevos)
 
 
-def enviar_avisos_rankia(fuente, pubs, es_estreno=False):
+def enviar_avisos_rankia(fuente, pubs, es_estreno=False, db=None):
     """Un solo aviso por hilo y revision: los mensajes nuevos van juntos,
     separados, y sin enlace (preferencia de Carlos). El texto de cada
     mensaje va completo, pero sin la cabecera 'autor · fecha' ni emails
@@ -305,10 +328,10 @@ def enviar_avisos_rankia(fuente, pubs, es_estreno=False):
         cuerpo = pub["texto"] or "(mensaje sin texto, quizas solo imagen)"
         cuerpo = quitar_emails(cuerpo) or "(mensaje solo con datos de contacto)"
         bloques.append(cuerpo)
-    return enviar_agrupado(cabecera, bloques)
+    return enviar_agrupado(cabecera, bloques, db=db, fuente_id=fuente["id"])
 
 
-def enviar_agrupado(cabecera, bloques):
+def enviar_agrupado(cabecera, bloques, db=None, fuente_id=None):
     """Junta los bloques en el menor numero de mensajes de Telegram posible
     (tope 4000 caracteres; el limite real de Telegram es 4096). Un bloque
     que no cabe ni solo en un mensaje se parte en trozos, sin perder texto."""
@@ -325,16 +348,28 @@ def enviar_agrupado(cabecera, bloques):
             piezas.append(bloque[:corte].rstrip() + " …")
             bloque = "… " + bloque[corte:].lstrip()
         piezas.append(bloque)
+    mensajes = []
     actual = cabecera
     for bloque in piezas:
         candidato = actual + (separador if actual != cabecera else "\n\n") + bloque
         if actual != cabecera and len(candidato) > 4000:
-            if not telegram(actual):
-                return False
+            mensajes.append(actual)
             actual = cabecera + " (cont.)" + "\n\n" + bloque
         else:
             actual = candidato
-    return telegram(actual)
+    mensajes.append(actual)
+    if db is not None:
+        db.executemany(
+            "INSERT INTO pendientes (fuente, texto, creado_en) VALUES (?,?,?)",
+            [(fuente_id, texto, ahora_iso()) for texto in mensajes])
+        # Vistos, marca de agua y cola se guardan juntos antes de la red.
+        db.commit()
+        enviar_pendientes(db, fuente_id)
+        return True
+    for texto in mensajes:
+        if not telegram(texto):
+            return False
+    return True
 
 
 # --------------------------------------------------------------- rss / atom
@@ -456,17 +491,21 @@ def main():
         fuentes = json.load(f)["fuentes"]
     db = abrir_db()
     fallos = 0
+    fallos_entrega = 0
     for fuente in fuentes:
         tipo = fuente.get("tipo", "")
         if tipo not in REVISORES:
             print(f"AVISO: tipo desconocido '{tipo}' en {fuente.get('id')}")
             continue
         try:
+            enviar_pendientes(db, fuente["id"])
             nuevos = REVISORES[tipo](fuente, db)
             registrar_revision(db, fuente["id"], "ok", nuevos)
             print(f"{fuente['id']}: {nuevos} avisos nuevos")
         except Exception as exc:  # una fuente rota no frena a las demas
             fallos += 1
+            if isinstance(exc, ErrorEntrega):
+                fallos_entrega += 1
             registrar_revision(db, fuente["id"], f"error: {exc}", 0)
             print(f"ERROR en {fuente['id']}: {exc}")
     db.commit()
@@ -480,6 +519,9 @@ def main():
         meta_set(db, "activado", ahora_iso())
         db.commit()
     db.close()
+    if fallos_entrega:
+        print("Telegram dejo bloques pendientes; se reintentaran en el siguiente ciclo")
+        return 1
     if fallos == len(fuentes):
         print("Todas las fuentes han fallado")
         return 1
