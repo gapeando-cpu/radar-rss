@@ -1,18 +1,18 @@
 {
- "ultima_revision_utc": "2026-11-26T07:17:55",
+ "ultima_revision_utc": "2026-11-26T08:17:57",
  "fuentes": [
   {
    "id": "rankia-cashback",
    "nombre": "Rankia: Tarjetas promociones y cashback",
    "resultado": "ok",
-   "nuevos": 0,
+   "nuevos": 2,
    "bloques_pendientes": 0
   },
   {
    "id": "rankia-igraal",
    "nombre": "Rankia: Ahorrar con cashback (iGraal y cuentas)",
    "resultado": "ok",
-   "nuevos": 2,
+   "nuevos": 1,
    "bloques_pendientes": 0
   },
   {
@@ -33,7 +33,7 @@
    "id": "rankia-bodega",
    "nombre": "Rankia: Cómo aumentar tus ingresos (experiencia compartida)",
    "resultado": "ok",
-   "nuevos": 3,
+   "nuevos": 2,
    "bloques_pendientes": 0
   }
  ]
