@@ -1,11 +1,11 @@
 {
- "ultima_revision_utc": "2026-11-25T22:17:59",
+ "ultima_revision_utc": "2026-11-26T06:17:57",
  "fuentes": [
   {
    "id": "rankia-cashback",
    "nombre": "Rankia: Tarjetas promociones y cashback",
    "resultado": "ok",
-   "nuevos": 3,
+   "nuevos": 1,
    "bloques_pendientes": 0
   },
   {
@@ -33,7 +33,7 @@
    "id": "rankia-bodega",
    "nombre": "Rankia: Cómo aumentar tus ingresos (experiencia compartida)",
    "resultado": "ok",
-   "nuevos": 10,
+   "nuevos": 11,
    "bloques_pendientes": 0
   }
  ]
