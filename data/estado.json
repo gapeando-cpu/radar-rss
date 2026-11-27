@@ -1,5 +1,5 @@
 {
- "ultima_revision_utc": "2026-11-27T07:17:57",
+ "ultima_revision_utc": "2026-11-27T08:18:01",
  "fuentes": [
   {
    "id": "rankia-cashback",
@@ -33,7 +33,7 @@
    "id": "rankia-bodega",
    "nombre": "Rankia: Cómo aumentar tus ingresos (experiencia compartida)",
    "resultado": "ok",
-   "nuevos": 2,
+   "nuevos": 4,
    "bloques_pendientes": 0
   }
  ]
