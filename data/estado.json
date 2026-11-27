@@ -1,5 +1,5 @@
 {
- "ultima_revision_utc": "2026-11-27T14:58:52",
+ "ultima_revision_utc": "2026-11-27T15:18:00",
  "fuentes": [
   {
    "id": "rankia-cashback",
@@ -19,7 +19,7 @@
    "id": "rankia-bbva",
    "nombre": "Rankia: Cuenta Online BBVA promoción 1.200€",
    "resultado": "ok",
-   "nuevos": 1,
+   "nuevos": 0,
    "bloques_pendientes": 0
   },
   {
