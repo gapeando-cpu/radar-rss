@@ -1,11 +1,11 @@
 {
- "ultima_revision_utc": "2026-11-27T12:17:59",
+ "ultima_revision_utc": "2026-11-27T13:18:07",
  "fuentes": [
   {
    "id": "rankia-cashback",
    "nombre": "Rankia: Tarjetas promociones y cashback",
    "resultado": "ok",
-   "nuevos": 2,
+   "nuevos": 0,
    "bloques_pendientes": 0
   },
   {
@@ -19,7 +19,7 @@
    "id": "rankia-bbva",
    "nombre": "Rankia: Cuenta Online BBVA promoción 1.200€",
    "resultado": "ok",
-   "nuevos": 2,
+   "nuevos": 1,
    "bloques_pendientes": 0
   },
   {
@@ -33,7 +33,7 @@
    "id": "rankia-bodega",
    "nombre": "Rankia: Cómo aumentar tus ingresos (experiencia compartida)",
    "resultado": "ok",
-   "nuevos": 13,
+   "nuevos": 2,
    "bloques_pendientes": 0
   }
  ]
